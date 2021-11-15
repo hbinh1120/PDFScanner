@@ -1,0 +1,27 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.PDFScanner" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/primary</item>
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Slash" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/primary</item>
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Edit" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/edit</item>
+        <item name="colorPrimaryDark">@color/edit_dark</item>
+        <item name="colorAccent">@color/primary</item>
+        <!-- Customize your theme here. -->
+    </style>
+
+</resources>

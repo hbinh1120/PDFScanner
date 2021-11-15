@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/darker_gray"
+    >
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_edit"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/edit"
+        android:minHeight="?android:attr/actionBarSize"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:theme="@style/Theme.Edit">
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Edit Page"
+            android:textSize="20sp"
+            android:textColor="@color/white"/>
+
+        <Button
+            android:id="@+id/edit_back"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="41dp"
+            android:layout_height="41dp"
+            android:layout_gravity="left"
+            android:background="@drawable/ic_back_foreground"/>
+
+        <Button
+            android:id="@+id/edit_check"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="41dp"
+            android:layout_height="41dp"
+            android:layout_gravity="right"
+            android:layout_marginEnd="15dp"
+            android:background="@drawable/ic_check_foreground"/>
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <ImageView
+        android:id="@+id/image_edit"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="120dp"
+        app:layout_constraintBottom_toTopOf="@+id/menu_edit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_edit" />
+    <HorizontalScrollView
+        android:id="@+id/filterView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/menu_edit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_edit">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="#7A000000">
+
+                <ImageView
+                    android:id="@+id/originalImageView"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/originalTextView"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom"
+                    android:background="#7A000000"
+                    android:gravity="center"
+                    android:text="Original"
+                    android:textColor="@color/white" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="#7A000000">
+
+                <ImageView
+                    android:id="@+id/grayImageView"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/grayTextView"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom"
+                    android:background="#7A000000"
+                    android:gravity="center"
+                    android:text="Grayscale"
+                    android:textColor="@color/white" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="#7A000000">
+
+                <ImageView
+                    android:id="@+id/magicImageView"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/magicTextView"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom"
+                    android:background="#7A000000"
+                    android:gravity="center"
+                    android:text="Magic Color"
+                    android:textColor="@color/white" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="#7A000000">
+
+                <ImageView
+                    android:id="@+id/bwImageView"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/bwTextView"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom"
+                    android:background="#7A000000"
+                    android:gravity="center"
+                    android:text="B&amp;W"
+                    android:textColor="@color/white" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="#7A000000">
+
+                <ImageView
+                    android:id="@+id/smoothImageView"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop" />
+
+                <TextView
+                    android:id="@+id/smoothTextView"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom"
+                    android:background="#7A000000"
+                    android:gravity="center"
+                    android:text="Smooth"
+                    android:textColor="@color/white" />
+            </FrameLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:visibility="gone"
+        android:id="@+id/adjustView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toTopOf="@+id/menu_edit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_edit"
+        >
+
+        <ImageView
+            android:id="@+id/brightnessImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_brightness_foreground"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/contrastImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_contrast_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <SeekBar
+            android:id="@+id/brightnessSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            app:layout_constraintBottom_toBottomOf="@+id/brightnessImageView"
+            app:layout_constraintEnd_toEndOf="@id/brightnessText"
+            app:layout_constraintStart_toEndOf="@+id/brightnessImageView"
+            app:layout_constraintTop_toTopOf="@+id/brightnessImageView" />
+
+        <SeekBar
+            android:id="@+id/contrastSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            app:layout_constraintBottom_toBottomOf="@+id/contrastImageView"
+            app:layout_constraintEnd_toEndOf="@+id/contrastText"
+            app:layout_constraintStart_toEndOf="@+id/contrastImageView"
+            app:layout_constraintTop_toTopOf="@+id/contrastImageView" />
+
+        <TextView
+            android:id="@+id/brightnessText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/brightnessImageView"
+            app:layout_constraintTop_toTopOf="@+id/brightnessImageView"
+            android:text="50"
+            android:layout_marginEnd="10dp"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/contrastText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/contrastImageView"
+            app:layout_constraintTop_toTopOf="@+id/contrastImageView"
+            android:text="50"
+            android:layout_marginEnd="10dp"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/menu_edit"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:background="@color/edit">
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/ic_delete_foreground"
+            app:layout_constraintEnd_toStartOf="@+id/filterButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/filterButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/ic_filter_foreground"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/adjustButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/ic_adjust_foreground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/filterButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/deleteTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="Delete"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/deleteButton"
+            app:layout_constraintStart_toStartOf="@+id/deleteButton" />
+
+        <TextView
+            android:id="@+id/filterTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="Filter"
+            android:textColor="@color/primary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/filterButton"
+            app:layout_constraintStart_toStartOf="@+id/filterButton" />
+
+        <TextView
+            android:id="@+id/adjustTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="Adjust"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/adjustButton"
+            app:layout_constraintStart_toStartOf="@+id/adjustButton" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
