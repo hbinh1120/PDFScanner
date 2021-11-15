@@ -205,8 +205,8 @@ public class CropFragment extends Fragment implements IOnBackPressed{
                 Matrix matrix = new Matrix();
                 matrix.postRotate((rotate_time%4)*90);
                 formSingleton.getForm().setOriginalBitmap(Bitmap.createBitmap(rgbFrameBitmap, 0, 0, rgbFrameBitmap.getWidth(), rgbFrameBitmap.getHeight(), matrix, true));
-                rgbFrameBitmap = null;
                 if (points!=null) {
+                    rgbFrameBitmap = null;
                     cropResult = perspectiveTransform(formSingleton.getForm().getOriginalBitmap(), points[0], points[1], points[2], points[3]);
                     formSingleton.getForm().setCropBitmap(cropResult);
                     getActivity().getSupportFragmentManager().beginTransaction()

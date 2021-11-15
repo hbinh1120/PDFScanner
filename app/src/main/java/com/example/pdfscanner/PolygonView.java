@@ -24,6 +24,8 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -244,7 +246,7 @@ public class PolygonView extends RelativeLayout {
         Point bR = new Point(bottomRight.getX(), bottomRight.getY());
         Point[] cropPoints = new Point[]{tL, tR, bR, bL};
         mop.fromArray(cropPoints);
-        Point[] x = FormDetector.sortPointClockwise(mop).toArray();
+        Point[] x = this.sortPointClockwise(mop).toArray();
         topLeft.setX((float) x[0].x);
         topLeft.setY((float) x[0].y);
         topRight.setX((float) x[1].x);
@@ -361,6 +363,72 @@ public class PolygonView extends RelativeLayout {
             polygonView.invalidate();
             return true;
         }
+    }
+
+    private MatOfPoint2f sortPointClockwise(MatOfPoint2f screenCnt2f) {
+        if (screenCnt2f.toArray().length != 4) {
+            return screenCnt2f;
+        }
+        List<Point> points = screenCnt2f.toList();
+
+        Point centerPoint = new Point();
+
+        // # initialize a list of coordinates that will be ordered
+        // # such that the first entry in the list is the top-left,
+        // # the second entry is the top-right, the third is the
+        // # bottom-right, and the fourth is the bottom-left
+        Collections.sort(points, new Comparator<Point>() {
+            @Override
+            public int compare(Point p1, Point p2) {
+                double s1 = p1.x + p1.y;
+                double s2 = p2.x + p2.y;
+                return Double.compare(s1, s2);
+            }
+        });
+        Point p_topLeft = points.get(0);
+        Point p_bottomRight = points.get(3);
+
+        List<Point> points_1 = new ArrayList<Point>();
+        points_1.add(points.get(1));
+        points_1.add(points.get(2));
+
+        // # now, compute the difference between the points, the
+        // # top-right point will have the smallest difference,
+        // # whereas the bottom-left will have the largest difference
+        Collections.sort(points_1, new Comparator<Point>() {
+            @Override
+            public int compare(Point p1, Point p2) {
+                double s1 = p1.y - p1.x  ;
+                double s2 = p2.y - p2.x;
+                return Double.compare(s1, s2);
+            }
+        });
+        Point p_topRight = points_1.get(0);
+        Point p_bottomLeft = points_1.get(1);
+        Point temp;
+        if (p_topLeft.y>p_bottomLeft.y) {
+            temp = p_topLeft;
+            p_topLeft = p_bottomLeft;
+            p_bottomLeft = temp;
+        }
+        if (p_topRight.y>p_bottomRight.y) {
+            temp = p_topRight;
+            p_topRight = p_bottomRight;
+            p_bottomRight = temp;
+        }
+        if (p_topLeft.x>p_topRight.x) {
+            temp = p_topLeft;
+            p_topLeft = p_topRight;
+            p_topRight = temp;
+        }
+        if (p_bottomLeft.x>p_bottomRight.x) {
+            temp = p_bottomLeft;
+            p_bottomLeft = p_bottomRight;
+            p_bottomRight = temp;
+        }
+        Point[] pts = new Point[]{p_topLeft,p_topRight, p_bottomRight, p_bottomLeft};
+        screenCnt2f = new MatOfPoint2f(pts);
+        return screenCnt2f;
     }
 
 }

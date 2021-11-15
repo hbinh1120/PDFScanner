@@ -9,6 +9,7 @@ import static java.lang.Math.sqrt;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.PointF;
 import android.util.Log;
 
 import org.opencv.android.Utils;
@@ -24,14 +25,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FormDetector {
     private static ImageSegmentation imageSegmentation = null;
     static int resizeThreshold = 500;
     static float resizeScale = 1.0f;
     static boolean isHisEqual = false;
-
+    static int cols,rows;
     public FormDetector(Activity activity) throws IOException {
         try {
             imageSegmentation = new ImageSegmentation(activity);
@@ -55,15 +58,17 @@ public class FormDetector {
                 outBmp = Bitmap.createScaledBitmap(bitmap, srcBmp.getWidth(), srcBmp.getHeight(), false);
             }
         }
-
-        Mat inputMat = new Mat(outBmp.getWidth(), outBmp.getHeight(), CvType.CV_8UC1);
+        Mat inputMat  = new Mat(outBmp.getWidth(), outBmp.getHeight(), CvType.CV_8UC1);
         Utils.bitmapToMat(outBmp, inputMat);
+
         MatOfPoint2f points = findLargestRectangle(inputMat);
         return points.toArray();
     }
 
     private static MatOfPoint2f findLargestRectangle(Mat original_image) {
         Mat image = resizeImage(original_image);
+        cols = image.cols();
+        rows = image.rows();
         //Mat untouched = original_image.clone();
         MatOfPoint2f result = new MatOfPoint2f();
         int cannyValue[] = {100, 150, 300};
@@ -294,6 +299,41 @@ public class FormDetector {
             return screenCnt2f;
         }
         List<Point> points = screenCnt2f.toList();
+
+        Point centerPoint = new Point();
+        int size = points.size();
+        for (Point point : points) {
+            centerPoint.x += point.x / size;
+            centerPoint.y += point.y / size;
+        }
+        Map<Integer, Point> orderedPoints = new HashMap<>();
+        for (Point pointF : points) {
+            int index = -1;
+            if (pointF.x < centerPoint.x && pointF.y < centerPoint.y) {
+                index = 0;
+            } else if (pointF.x > centerPoint.x && pointF.y < centerPoint.y) {
+                index = 1;
+            } else if (pointF.x < centerPoint.x && pointF.y > centerPoint.y) {
+                index = 2;
+            } else if (pointF.x > centerPoint.x && pointF.y > centerPoint.y) {
+                index = 3;
+            }
+            orderedPoints.put(index, pointF);
+        }
+
+        if (orderedPoints.size()!=4) {
+
+            ArrayList<Point> temp_points = new ArrayList<Point>();
+            MatOfPoint2f result = new MatOfPoint2f();
+            temp_points.add(new Point(0,0));
+            temp_points.add(new Point(cols,0));
+            temp_points.add(new Point(cols,rows));
+            temp_points.add(new Point(0,rows));
+            result.fromList(temp_points);
+            return sortPointClockwise(upsize(result));
+
+        }
+
         // # initialize a list of coordinates that will be ordered
         // # such that the first entry in the list is the top-left,
         // # the second entry is the top-right, the third is the
