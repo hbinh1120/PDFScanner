@@ -121,6 +121,7 @@ public class ViewFileFragment extends Fragment implements IOnBackPressed{
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
                 Toast.makeText(getActivity(), "File no longer exists", Toast.LENGTH_SHORT).show();
                 PDFScannerAPI.pdfScannerAPI.deleteFile(getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("token",""),scannerFileID).enqueue(new Callback<ScannerFile>() {
                     @Override
