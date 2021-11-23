@@ -363,12 +363,9 @@ public class EditFragment extends Fragment{
                     });
                 }
                 else {
+                    progressDialog.dismiss();
                     AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
-                    if (format_name.equals("")) {
-                        builder1.setMessage("Error\n \nPlease enter File name.");
-                    } else {
-                        builder1.setMessage("Error\n \nFile name already exist.");
-                    }
+                    builder1.setMessage("Error\n \nPlease enter File name.");
                     builder1.setCancelable(true);
 
                     builder1.setPositiveButton(
