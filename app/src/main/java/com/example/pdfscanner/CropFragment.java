@@ -143,7 +143,6 @@ public class CropFragment extends Fragment implements IOnBackPressed{
         deleteDialog.setContentView(R.layout.dialog_delete);
         deleteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         deleteDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-        deleteDialog.setCancelable(false);
         deleteNoButton = deleteDialog.findViewById(R.id.btn_delete_no);
         deleteYesButton = deleteDialog.findViewById(R.id.btn_delete_yes);
 

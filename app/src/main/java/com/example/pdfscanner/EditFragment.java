@@ -132,7 +132,6 @@ public class EditFragment extends Fragment{
         checkDialog.setContentView(R.layout.dialog_save);
         checkDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         checkDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-        checkDialog.setCancelable(false);
         saveButton = checkDialog.findViewById(R.id.btn_save_yes);
         cancelButton = checkDialog.findViewById(R.id.btn_save_no);
         save_filename = checkDialog.findViewById(R.id.save_filename);
@@ -164,7 +163,6 @@ public class EditFragment extends Fragment{
         deleteDialog.setContentView(R.layout.dialog_delete);
         deleteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         deleteDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-        deleteDialog.setCancelable(false);
         deleteNoButton = deleteDialog.findViewById(R.id.btn_delete_no);
         deleteYesButton = deleteDialog.findViewById(R.id.btn_delete_yes);
         change_filter_check = true;
