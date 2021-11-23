@@ -300,7 +300,9 @@ public class EditFragment extends Fragment{
                         try {
                             pdfDocument.writeTo(baos);
                         } catch (IOException e) {
-                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                            if (getActivity()!=null) {
+                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                            }
                             e.printStackTrace();
                         }
                         pdfDocument.close();
@@ -339,9 +341,13 @@ public class EditFragment extends Fragment{
                                     @Override
                                     public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
                                         if (response.code() < 300 && response.code() > 199) {
-                                            Toast.makeText(getActivity(), "File has been saved successfully", Toast.LENGTH_SHORT).show();
+                                            if (getActivity()!=null) {
+                                                Toast.makeText(getActivity(), "File has been saved successfully", Toast.LENGTH_SHORT).show();
+                                            }
                                         } else {
-                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                            if (getActivity()!=null) {
+                                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                            }
                                         }
                                         progressDialog.dismiss();
                                         Intent intent = new Intent(getActivity(), MainActivity.class);
@@ -352,7 +358,9 @@ public class EditFragment extends Fragment{
                                     @Override
                                     public void onFailure(Call<ScannerFile> call, Throwable t) {
                                         progressDialog.dismiss();
-                                        Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                        if (getActivity()!=null) {
+                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                        }
                                     }
                                 });
                             } else {

@@ -121,8 +121,10 @@ public class ViewFileFragment extends Fragment implements IOnBackPressed{
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
-                Toast.makeText(getActivity(), "File no longer exists", Toast.LENGTH_SHORT).show();
+                if (getActivity()!=null) {
+                    ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
+                    Toast.makeText(getActivity(), "File no longer exists", Toast.LENGTH_SHORT).show();
+                }
                 PDFScannerAPI.pdfScannerAPI.deleteFile(getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("token",""),scannerFileID).enqueue(new Callback<ScannerFile>() {
                     @Override
                     public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
@@ -162,14 +164,18 @@ public class ViewFileFragment extends Fragment implements IOnBackPressed{
                                     @Override
                                     public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
                                         if (response.code()>199 && response.code()<300) {
-                                            ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
-                                            Toast.makeText(getActivity(), "File deleted successfully", Toast.LENGTH_SHORT).show();
-                                            MainFragment mainFragment = MainFragment.newInstance(false);
-                                            getActivity().getSupportFragmentManager().beginTransaction()
-                                                    .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
-                                                    .commit();
+                                            if (getActivity()!=null) {
+                                                ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
+                                                Toast.makeText(getActivity(), "File deleted successfully", Toast.LENGTH_SHORT).show();
+                                                MainFragment mainFragment = MainFragment.newInstance(false);
+                                                getActivity().getSupportFragmentManager().beginTransaction()
+                                                        .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
+                                                        .commit();
+                                            }
                                         } else {
-                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                            if (getActivity()!=null) {
+                                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                            }
                                         }
                                     }
 
@@ -233,24 +239,36 @@ public class ViewFileFragment extends Fragment implements IOnBackPressed{
                                         @Override
                                         public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
                                             if (response.code()>199 && response.code()<300) {
-                                                File newFile = new File(getActivity().getExternalFilesDir("PDFScanner"), newFileName + "." + scannerFile.getFile_type());
-                                                boolean isSuccess = file.renameTo(newFile);
-                                                if (isSuccess) {
-                                                    file = newFile;
-                                                    fileNameText.setText(newFileName+"."+scannerFile.getFile_type());
-                                                    Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
-                                                } else {
-                                                    Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
+                                                if (getActivity()!=null) {
+                                                    File newFile = new File(getActivity().getExternalFilesDir("PDFScanner"), newFileName + "." + scannerFile.getFile_type());
+                                                    boolean isSuccess = file.renameTo(newFile);
+                                                    if (isSuccess) {
+                                                        file = newFile;
+                                                        fileNameText.setText(newFileName + "." + scannerFile.getFile_type());
+                                                        if (getActivity()!=null) {
+                                                            Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    } else {
+                                                        if (getActivity()!=null) {
+                                                            Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    }
+                                                    if (getActivity()!=null) {
+                                                        Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
+                                                    }
                                                 }
-                                                Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
                                             } else {
-                                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                                if (getActivity()!=null) {
+                                                    Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                                }
                                             }
                                         }
 
                                         @Override
                                         public void onFailure(Call<ScannerFile> call, Throwable t) {
-                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                            if (getActivity()!=null) {
+                                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                            }
                                         }
                                     });
                                 }
@@ -302,9 +320,13 @@ public class ViewFileFragment extends Fragment implements IOnBackPressed{
                 }
                 try {
                     copyFileToDownloads(getActivity(), file, scannerFile.getFile_name()+"."+scannerFile.getFile_type(),mimeType);
-                    Toast.makeText(getActivity(), "File downloaded successfully", Toast.LENGTH_SHORT).show();
+                    if (getActivity()!=null) {
+                        Toast.makeText(getActivity(), "File downloaded successfully", Toast.LENGTH_SHORT).show();
+                    }
                 } catch (IOException e) {
-                    Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
+                    if (getActivity()!=null) {
+                        Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
+                    }
                     e.printStackTrace();
                 }
             }
