@@ -81,8 +81,10 @@ public class SignupFragment extends Fragment {
                                         .replace(R.id.initial_container, loginFragment, "LOGIN_FRAGMENT")
                                         .addToBackStack(null)
                                         .commit();
+                            } else if (response.code()==400) {
+                                error.setText("Username already exists");
                             } else {
-                                error.setText("Something went wrong");
+                                error.setText("Username went wrong");
                             }
                         }
 
