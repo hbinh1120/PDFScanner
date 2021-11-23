@@ -145,6 +145,7 @@
             android:id="@+id/toLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="15sp"
             android:text="Already have account? Login"
             android:textColor="@color/primary"
             app:layout_constraintEnd_toEndOf="parent"
