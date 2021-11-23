@@ -2,11 +2,13 @@ package com.example.pdfscanner;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
@@ -16,6 +18,7 @@ import androidx.fragment.app.FragmentManager;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.example.pdfscanner.formdetector.FormDetector;
 
@@ -25,8 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     public static FormDetector formDetector;
+
+    public static boolean isMainFragment = true;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
 
@@ -59,12 +64,13 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        MainFragment.haveNewFile = true;
         verifyStoragePermissions(MainActivity.this);
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment = fm.findFragmentById(R.id.fragment_container);
         if (fragment == null) {
-            fragment = new MainFragment();
+            fragment = MainFragment.newInstance(true);
             fm.beginTransaction().add(R.id.fragment_container,fragment).commit();
         }
     }
@@ -73,6 +79,32 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (!(fragment instanceof IOnBackPressed) || !((IOnBackPressed) fragment).onBackPressed()) {
+            AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+            builder1.setTitle("Quit");
+            builder1.setMessage("Do you want to quit this app?");
+            builder1.setCancelable(true);
+
+            builder1.setPositiveButton(
+                    "Yes",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
+
+            builder1.setNegativeButton(
+                    "No",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+
+            AlertDialog alert11 = builder1.create();
+            alert11.show();
+        }
+        else if (!isMainFragment){
             super.onBackPressed();
         }
     }

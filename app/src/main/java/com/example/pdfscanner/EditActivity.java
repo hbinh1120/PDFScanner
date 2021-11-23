@@ -1,9 +1,7 @@
 package com.example.pdfscanner;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -11,17 +9,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import org.opencv.android.Utils;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.utils.Converters;
-
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EditActivity extends AppCompatActivity {
     private static final String EXTRA_SOURCE =

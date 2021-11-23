@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="horizontal"
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:id="@+id/username_linear"
+        android:layout_marginHorizontal="30dp"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" >
+        <ImageView
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:src="@drawable/ic_person_foreground"
+            />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter username">
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/register_username"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:text="* Username must have length greater than 1"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="30dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:id="@+id/password_linear"
+        app:layout_constraintEnd_toEndOf="@+id/username_linear"
+        app:layout_constraintStart_toStartOf="@+id/username_linear"
+        app:layout_constraintTop_toBottomOf="@+id/username_linear"
+        >
+        <ImageView
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:src="@drawable/ic_key_foreground"
+            />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter password"
+            app:passwordToggleEnabled="true"
+            >
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:id="@+id/register_password"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:text="* Password must have length between 8 and 65"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="30dp"
+        android:layout_marginTop="30dp"
+        android:id="@+id/repassword_linear"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="@+id/password_linear"
+        app:layout_constraintStart_toStartOf="@+id/password_linear"
+        app:layout_constraintTop_toBottomOf="@+id/password_linear"
+        >
+        <ImageView
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:src="@drawable/ic_key_foreground"
+            />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirm password"
+            app:passwordToggleEnabled="true"
+            >
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:id="@+id/repassword"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+
+
+
+    <Button
+        android:id="@+id/signup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:text="Sign up"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:background="@color/primary"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@+id/repassword_linear" />
+
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="100dp"
+        app:srcCompat="@mipmap/ic_launcher_round" />
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/signup">
+
+        <TextView
+            android:id="@+id/toLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Already have account? Login"
+            android:textColor="@color/primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/login" />
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/signupError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_red_dark"
+        app:layout_constraintBottom_toTopOf="@+id/signup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/repassword_linear" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

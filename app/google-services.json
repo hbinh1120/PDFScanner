@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "467484482144",
+    "project_id": "rncontacts-91d2d",
+    "storage_bucket": "rncontacts-91d2d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467484482144:android:148bcb8522ba1408ffc105",
+        "android_client_info": {
+          "package_name": "com.example.pdfscanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "467484482144-4ejmeh0pv14fd7cskfl37ihq7jl9llbi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAj8Nz9tEzSeHoc00WiR5H8COWeZDPwL7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "467484482144-4ejmeh0pv14fd7cskfl37ihq7jl9llbi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "467484482144-1n8hl3c8k58lf81pv65897c03c1o7usd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hoangduy.rncontacts"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467484482144:android:8d44b8606155f650ffc105",
+        "android_client_info": {
+          "package_name": "com.hoangduy.rncontacts"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "467484482144-4ejmeh0pv14fd7cskfl37ihq7jl9llbi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAj8Nz9tEzSeHoc00WiR5H8COWeZDPwL7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "467484482144-4ejmeh0pv14fd7cskfl37ihq7jl9llbi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "467484482144-1n8hl3c8k58lf81pv65897c03c1o7usd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hoangduy.rncontacts"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

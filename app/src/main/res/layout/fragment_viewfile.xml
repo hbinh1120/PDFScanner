@@ -35,7 +35,39 @@
 
     </androidx.appcompat.widget.Toolbar>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/placeholder"
+        app:layout_constraintBottom_toTopOf="@id/menu_viewfile"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_viewfile">
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingBottom="10dp"
+            android:text="Loading..."
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/progressBar"
+            app:layout_constraintStart_toStartOf="@+id/progressBar"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <com.github.barteksc.pdfviewer.PDFView
+        android:visibility="gone"
         android:id="@+id/pdf_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -47,6 +79,7 @@
     </com.github.barteksc.pdfviewer.PDFView>
 
     <ImageView
+        android:visibility="gone"
         android:id="@+id/image_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"

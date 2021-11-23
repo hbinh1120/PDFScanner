@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,36 +27,46 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
-import com.example.pdfscanner.database.ScannerFile;
-import com.example.pdfscanner.database.ScannerFileLab;
+import com.example.pdfscanner.api.PDFScannerAPI;
+import com.example.pdfscanner.model.ScannerFile;
+import com.example.pdfscanner.singleton.ScannerFileSingleton;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.github.barteksc.pdfviewer.PDFView;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
-public class ViewFileFragment extends Fragment {
-    private ScannerFile scannerFile;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class ViewFileFragment extends Fragment implements IOnBackPressed{
     private static final String SCANNER_FILE_ID = "scanner_file_id";
-
+    private File file;
     private PDFView pdfView;
     private ImageView imageView;
     private Button deleteButton, shareButton, editButton, downloadButton, backButton;
     private TextView fileNameText;
+    private int scannerFileID;
+    private ScannerFile scannerFile;
+    private ConstraintLayout placeholder;
 
-    public static ViewFileFragment newIntance(UUID scannerFileID) {
+    public static ViewFileFragment newIntance(int scannerFileID) {
         Bundle args = new Bundle();
-        args.putSerializable(SCANNER_FILE_ID, scannerFileID);
-
+        args.putInt(SCANNER_FILE_ID, scannerFileID);
         ViewFileFragment fragment = new ViewFileFragment();
         fragment.setArguments(args);
         return fragment;
@@ -66,14 +75,23 @@ public class ViewFileFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        UUID scannerFileID = (UUID) getArguments().getSerializable(SCANNER_FILE_ID);
-        scannerFile = ScannerFileLab.get(getActivity()).getScannerFile(scannerFileID);
+        scannerFileID = getArguments().getInt(SCANNER_FILE_ID);
+        scannerFile = ScannerFileSingleton.get(getActivity()).getScannerFile(scannerFileID);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        MainActivity.isMainFragment = false;
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_viewfile, container, false);
+        MainFragment.haveNewFile = false;
+        placeholder = v.findViewById(R.id.placeholder);
+        placeholder.setVisibility(View.VISIBLE);
         pdfView = v.findViewById(R.id.pdf_view);
         imageView = v.findViewById(R.id.image_view);
         deleteButton = v.findViewById(R.id.deleteFileButton);
@@ -82,28 +100,49 @@ public class ViewFileFragment extends Fragment {
         downloadButton = v.findViewById(R.id.downloadButton);
         backButton = v.findViewById(R.id.viewfile_back);
         fileNameText = v.findViewById(R.id.viewfile_name);
-        fileNameText.setText(scannerFile.getTitle()+"."+scannerFile.getType());
-        File file = new File(getActivity().getExternalFilesDir("PDFScanner"), scannerFile.getTitle()+"."+scannerFile.getType());
-
-        if (!file.exists()) {
-            ScannerFileLab.get(getActivity()).removeScannerFile(scannerFile);
-            Toast.makeText(getActivity(), "File no longer exists", Toast.LENGTH_SHORT).show();
-            MainFragment mainFragment = new MainFragment();
-            getActivity().getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
-                    .commit();
-        } else {
-            if (scannerFile.getType().equals("pdf")) {
-                pdfView.setVisibility(View.VISIBLE);
-                imageView.setVisibility(View.GONE);
-                pdfView.fromFile(file).load();
-            } else {
-                pdfView.setVisibility(View.GONE);
-                imageView.setVisibility(View.VISIBLE);
-                Bitmap imageBitmap = BitmapFactory.decodeFile(file.getPath());
-                imageView.setImageBitmap(imageBitmap);
+        fileNameText.setText(scannerFile.getFile_name()+"."+scannerFile.getFile_type());
+        file = new File(getActivity().getExternalFilesDir("PDFScanner"), scannerFile.getFile_name()+"."+scannerFile.getFile_type());
+        StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("ScannerFiles/"+getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("username","")+"/"+scannerFile.getDate_created()+"."+scannerFile.getFile_type());
+        storageReference.getFile(file).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                placeholder.setVisibility(View.GONE);
+                if (scannerFile.getFile_type().equals("pdf")) {
+                    pdfView.setVisibility(View.VISIBLE);
+                    imageView.setVisibility(View.GONE);
+                    pdfView.fromFile(file).load();
+                } else {
+                    pdfView.setVisibility(View.GONE);
+                    imageView.setVisibility(View.VISIBLE);
+                    Bitmap imageBitmap = BitmapFactory.decodeFile(file.getPath());
+                    imageView.setImageBitmap(imageBitmap);
+                }
             }
-        }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getActivity(), "File no longer exists", Toast.LENGTH_SHORT).show();
+                PDFScannerAPI.pdfScannerAPI.deleteFile(getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("token",""),scannerFileID).enqueue(new Callback<ScannerFile>() {
+                    @Override
+                    public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
+                        if (response.code()>199 && response.code()<300) {
+                            Log.i("Delete","Success");
+                        } else {
+                            Log.i("Delete","Fail");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ScannerFile> call, Throwable t) {
+                        Log.i("Delete","Fail");
+                    }
+                });
+                MainFragment mainFragment = MainFragment.newInstance(false);
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
+                        .commit();
+            }
+        });
 
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,15 +157,41 @@ public class ViewFileFragment extends Fragment {
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 dialog.dismiss();
-                                ScannerFileLab.get(getActivity()).removeScannerFile(scannerFile);
-                                Toast.makeText(getActivity(), "File deleted successfully", Toast.LENGTH_SHORT).show();
-                                MainFragment mainFragment = new MainFragment();
-                                getActivity().getSupportFragmentManager().beginTransaction()
-                                        .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
-                                        .commit();
+                                PDFScannerAPI.pdfScannerAPI.deleteFile(getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("token",""),scannerFileID).enqueue(new Callback<ScannerFile>() {
+                                    @Override
+                                    public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
+                                        if (response.code()>199 && response.code()<300) {
+                                            ScannerFileSingleton.get(getActivity()).delete(scannerFile.getId());
+                                            Toast.makeText(getActivity(), "File deleted successfully", Toast.LENGTH_SHORT).show();
+                                            MainFragment mainFragment = MainFragment.newInstance(false);
+                                            getActivity().getSupportFragmentManager().beginTransaction()
+                                                    .replace(R.id.fragment_container, mainFragment, "MAIN_FRAGMENT")
+                                                    .commit();
+                                        } else {
+                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<ScannerFile> call, Throwable t) {
+                                        if (getActivity()!=null) {
+                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+                                });
+                                storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        Log.i("Delete","Success");
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.i("Delete","Fail");
+                                    }
+                                });
                             }
                         });
-
                 builder1.setNegativeButton(
                         "Cancel",
                         new DialogInterface.OnClickListener() {
@@ -134,12 +199,10 @@ public class ViewFileFragment extends Fragment {
                                 dialog.dismiss();
                             }
                         });
-
                 AlertDialog alert11 = builder1.create();
                 alert11.show();
             }
         });
-
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -160,28 +223,38 @@ public class ViewFileFragment extends Fragment {
                         "Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                dialog.dismiss();
                                 String newFileName = editFileName.getText().toString().trim();
-                                if (!newFileName.equals("") && ScannerFileLab.get(getActivity()).checkTitle(newFileName)) {
-                                    File newFile = new File(getActivity().getExternalFilesDir("PDFScanner"), newFileName + "." + scannerFile.getType());
-                                    boolean isSuccess = file.renameTo(newFile);
-                                    if (isSuccess) {
-                                        Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
-                                        scannerFile.setTitle(newFileName);
-                                        fileNameText.setText(newFileName+"."+scannerFile.getType());
-                                        ScannerFileLab.get(getActivity()).updateScannerFile(scannerFile);
-                                    } else {
-                                        Toast.makeText(getActivity(), "Erorr: Something went wrong", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                else if (newFileName.equals("")) {
-                                    Toast.makeText(getActivity(), "Error: File name must be not NULL", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(getActivity(), "Error: File name already exist", Toast.LENGTH_SHORT).show();
+                                if (!newFileName.equals("")) {
+                                    dialog.dismiss();
+                                    scannerFile.setFile_name(newFileName);
+                                    ScannerFile newScannerFile = scannerFile;
+                                    PDFScannerAPI.pdfScannerAPI.updateFile(getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("token",""),scannerFileID,newScannerFile).enqueue(new Callback<ScannerFile>() {
+                                        @Override
+                                        public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
+                                            if (response.code()>199 && response.code()<300) {
+                                                File newFile = new File(getActivity().getExternalFilesDir("PDFScanner"), newFileName + "." + scannerFile.getFile_type());
+                                                boolean isSuccess = file.renameTo(newFile);
+                                                if (isSuccess) {
+                                                    file = newFile;
+                                                    fileNameText.setText(newFileName+"."+scannerFile.getFile_type());
+                                                    Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
+                                                }
+                                                Toast.makeText(getActivity(), "File renamed successfully", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<ScannerFile> call, Throwable t) {
+                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                                 }
                             }
                         });
-
                 builder1.setNegativeButton(
                         "Cancel",
                         new DialogInterface.OnClickListener() {
@@ -199,7 +272,7 @@ public class ViewFileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_SEND);
-                if (scannerFile.getType().equals("pdf")) {
+                if (scannerFile.getFile_type().equals("pdf")) {
                     i.setType("application/pdf");
                 } else {
                     i.setType("image/jpeg");
@@ -223,11 +296,11 @@ public class ViewFileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String mimeType = "application/pdf";
-                if (!scannerFile.getType().equals("pdf")) {
+                if (!scannerFile.getFile_type().equals("pdf")) {
                     mimeType = "image/jpeg";
                 }
                 try {
-                    copyFileToDownloads(getActivity(), file, scannerFile.getTitle()+"."+scannerFile.getType(),mimeType);
+                    copyFileToDownloads(getActivity(), file, scannerFile.getFile_name()+"."+scannerFile.getFile_type(),mimeType);
                     Toast.makeText(getActivity(), "File downloaded successfully", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     Toast.makeText(getActivity(), "Error: Something went wrong", Toast.LENGTH_SHORT).show();
@@ -268,5 +341,10 @@ public class ViewFileFragment extends Fragment {
         outputStream.flush();
         outputStream.close();
         bufferedInputStream.close();
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        return true;
     }
 }

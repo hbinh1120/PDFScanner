@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,6 +26,7 @@ import androidx.fragment.app.Fragment;
 import androidx.exifinterface.media.ExifInterface;
 
 import com.example.pdfscanner.formdetector.FormDetector;
+import com.example.pdfscanner.singleton.FormSingleton;
 
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
@@ -63,6 +62,7 @@ public class CropFragment extends Fragment implements IOnBackPressed{
     private float scale;
     private int rotate_time;
     private Dialog deleteDialog;
+    private boolean reallyBack;
 
 
     public static CropFragment newInstance(String imgPath) {
@@ -127,6 +127,8 @@ public class CropFragment extends Fragment implements IOnBackPressed{
             }
         }
 
+        reallyBack = false;
+
         rotateButton = v.findViewById(R.id.rotateButton);
         cropButton = v.findViewById(R.id.cropButton);
         backButton = v.findViewById(R.id.crop_back);
@@ -148,6 +150,7 @@ public class CropFragment extends Fragment implements IOnBackPressed{
         deleteNoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                reallyBack = false;
                 deleteDialog.dismiss();
             }
         });
@@ -155,15 +158,15 @@ public class CropFragment extends Fragment implements IOnBackPressed{
         deleteYesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(),MainActivity.class);
-                startActivity(intent);
+                reallyBack = true;
+                getActivity().onBackPressed();
             }
         });
 
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Objects.requireNonNull(getActivity()).onBackPressed();
+                getActivity().onBackPressed();
             }
         });
 
@@ -402,7 +405,12 @@ public class CropFragment extends Fragment implements IOnBackPressed{
 
     @Override
     public boolean onBackPressed() {
-        deleteDialog.show();
-        return true;
+        if (!reallyBack) {
+            deleteDialog.show();
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }

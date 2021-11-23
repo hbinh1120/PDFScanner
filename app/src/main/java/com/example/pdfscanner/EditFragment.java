@@ -1,22 +1,18 @@
 package com.example.pdfscanner;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
@@ -33,21 +30,33 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
-import com.example.pdfscanner.database.ScannerFile;
-import com.example.pdfscanner.database.ScannerFileLab;
+import com.example.pdfscanner.api.PDFScannerAPI;
+import com.example.pdfscanner.filter.Filter;
+import com.example.pdfscanner.model.ScannerFile;
+import com.example.pdfscanner.singleton.FormSingleton;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-public class EditFragment extends Fragment {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class EditFragment extends Fragment{
     private Button deleteButton, filterButton, backButton, checkButton, adjustButton, saveButton, cancelButton, deleteNoButton, deleteYesButton;
     private ImageView editImage, originalImage , grayImage, bwImage, smoothImage, magicImage;;
     private Bitmap originalBitmap,cropBitmap, grayBitmap, bwBitmap, smoothBitmap, magicBitmap;
@@ -67,9 +76,11 @@ public class EditFragment extends Fragment {
     private int contrastValue, brightValue;
     private String format_type = "pdf";
     private String format_name;
-    private ScannerFileLab scannerFileLab;
     private boolean change_filter_check = true;
-
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
+    private String token;
+    private Dialog progressDialog;
 
     public static EditFragment newInstance() {
         EditFragment fragment = new EditFragment();
@@ -79,11 +90,12 @@ public class EditFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        scannerFileLab = ScannerFileLab.get(getActivity());
+        storage = FirebaseStorage.getInstance();
         formSingleton = FormSingleton.get(getActivity());
         cropBitmap = formSingleton.getForm().getCropBitmap();
         originalBitmap = cropBitmap.copy(cropBitmap.getConfig(), false);
         filter = new Filter(originalBitmap);
+        token = getActivity().getSharedPreferences("PDFScannerPrefs", Context.MODE_PRIVATE).getString("token","");
     }
 
 
@@ -91,6 +103,11 @@ public class EditFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_edit,container,false);
+        progressDialog = new Dialog(getActivity());
+        progressDialog.setContentView(R.layout.dialog_progress);
+        progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        progressDialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        progressDialog.setCancelable(false);
         deleteButton = v.findViewById(R.id.deleteButton);
         filterButton = v.findViewById(R.id.filterButton);
         backButton = v.findViewById(R.id.edit_back);
@@ -139,8 +156,8 @@ public class EditFragment extends Fragment {
         magicBitmap = filter.getMagicColorBitmap();
         magicImage.setImageBitmap(magicBitmap);
 
-        editBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-        setSelectedFilter(originalText);
+        editBitmap = magicBitmap.copy(magicBitmap.getConfig(), true);
+        setSelectedFilter(magicText);
         editImage.setImageBitmap(editBitmap);
 
         deleteDialog = new Dialog(getActivity());
@@ -165,8 +182,10 @@ public class EditFragment extends Fragment {
         deleteYesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(),MainActivity.class);
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+                getActivity().finish();
             }
         });
 
@@ -237,7 +256,7 @@ public class EditFragment extends Fragment {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Objects.requireNonNull(getActivity()).onBackPressed();
+                getActivity().onBackPressed();
             }
         });
 
@@ -258,9 +277,18 @@ public class EditFragment extends Fragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressDialog.show();
                 format_name = save_filename.getText().toString().trim();
-                if (!format_name.equals("") && scannerFileLab.checkTitle(format_name)) {
+                String pattern = "HH:mm:ss dd-MM-yyyy";
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+                String date_created = simpleDateFormat.format(new Date());
+
+                if (!format_name.equals("")) {
                     checkDialog.dismiss();
+                    String username = getActivity().getSharedPreferences("PDFScannerPrefs",Context.MODE_PRIVATE).getString("username","");
+                    storageReference = storage.getReference().child("ScannerFiles/"+username+"/"+date_created+"."+format_type);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     if (format_type.equals("pdf")) {
                         PdfDocument pdfDocument = new PdfDocument();
                         PdfDocument.PageInfo pi = new PdfDocument.PageInfo.Builder(editBitmap.getWidth(), editBitmap.getHeight(), 1).create();
@@ -271,44 +299,75 @@ public class EditFragment extends Fragment {
                         canvas.drawPaint(paint);
                         canvas.drawBitmap(editBitmap, 0, 0, null);
                         pdfDocument.finishPage(page);
-                        File file = new File(getActivity().getExternalFilesDir("PDFScanner"), format_name+"."+format_type);
                         try {
-                            FileOutputStream fileOutputStream = new FileOutputStream(file);
-                            pdfDocument.writeTo(fileOutputStream);
-                            fileOutputStream.flush();
-                            fileOutputStream.close();
-                            Toast.makeText(getActivity(), "File has been saved successfully", Toast.LENGTH_SHORT).show();
+                            pdfDocument.writeTo(baos);
                         } catch (IOException e) {
                             Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                         pdfDocument.close();
                     } else {
-                        File file = new File(getActivity().getExternalFilesDir("PDFScanner"), format_name+"."+format_type);
-                        try {
-                            FileOutputStream fileOutputStream = new FileOutputStream(file);
-                            editBitmap.compress(Bitmap.CompressFormat.JPEG,100,fileOutputStream);
-                            fileOutputStream.flush();
-                            fileOutputStream.close();
-                            Toast.makeText(getActivity(), "File has been saved successfully", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
-                        }
+                        editBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                     }
-                    ScannerFile scannerFile = new ScannerFile();
-                    scannerFile.setTitle(format_name);
-                    scannerFile.setType(format_type);
-                    scannerFileLab.addScannerFile(scannerFile);
-                    Intent intent = new Intent(getActivity(), MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    getActivity().finish();
+                    byte[] data = baos.toByteArray();
+                    UploadTask uploadTask = storageReference.putBytes(data);
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            Log.i("Save","Fail");
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Log.i("Save","Success");
+                        }
+                    })
+                    .continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                        @Override
+                        public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                            if (!task.isSuccessful()) {
+                                throw task.getException();
+                            }
+                            return storageReference.getDownloadUrl();
+                        }
+                    }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> task) {
+                            if (task.isSuccessful()) {
+                                Uri downloadUri = task.getResult();
+                                ScannerFile scannerFile = new ScannerFile(format_name,format_type,downloadUri.toString(),date_created);
+                                PDFScannerAPI.pdfScannerAPI.putFile(token,scannerFile).enqueue(new Callback<ScannerFile>() {
+                                    @Override
+                                    public void onResponse(Call<ScannerFile> call, Response<ScannerFile> response) {
+                                        if (response.code() < 300 && response.code() > 199) {
+                                            Toast.makeText(getActivity(), "File has been saved successfully", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                        }
+                                        progressDialog.dismiss();
+                                        Intent intent = new Intent(getActivity(), MainActivity.class);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(intent);
+                                        getActivity().finish();
+                                    }
+                                    @Override
+                                    public void onFailure(Call<ScannerFile> call, Throwable t) {
+                                        progressDialog.dismiss();
+                                        Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            } else {
+                                progressDialog.dismiss();
+                                Log.i("Save","Fail");
+                            }
+                        }
+                    });
                 }
                 else {
                     AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
                     if (format_name.equals("")) {
-                        builder1.setMessage("Error\n \nFile name must not be NULL.");
+                        builder1.setMessage("Error\n \nPlease enter File name.");
                     } else {
                         builder1.setMessage("Error\n \nFile name already exist.");
                     }

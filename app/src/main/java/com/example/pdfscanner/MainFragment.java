@@ -3,7 +3,9 @@ package com.example.pdfscanner;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
@@ -17,30 +19,48 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.pdfscanner.database.ScannerFile;
-import com.example.pdfscanner.database.ScannerFileLab;
+import com.example.pdfscanner.api.PDFScannerAPI;
+import com.example.pdfscanner.model.ScannerFile;
+import com.example.pdfscanner.singleton.ScannerFileSingleton;
+import com.facebook.shimmer.ShimmerFrameLayout;
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainFragment extends Fragment implements IOnBackPressed{
 
     private static final int REQUEST_IMAGE_SELECT = 200;
     private static final int REQUEST_IMAGE_CAPTURE = 0;
+    private static final String HAVE_NEW_FILE = "HAVE_NEW_FILE";
 
     private static final String fileName = "output.jpg";
 
@@ -55,32 +75,116 @@ public class MainFragment extends Fragment implements IOnBackPressed{
         }
     }
 
+    private ShimmerFrameLayout shimmerFrameLayout;
+
     private File mFile;
     private RecyclerView filesView;
     private ConstraintLayout emptyView;
     private FileAdapter fileAdapter;
     private SearchView searchView;
     private TextView titleView;
+    private ImageButton menuButton;
+    DrawerLayout drawerLayout ;
+    NavigationView navigationView;
+    LinearLayout changepassword, logout;
+    public static boolean haveNewFile;
+    private ScannerFileSingleton scannerFileSingleton;
 
+    public static MainFragment newInstance(boolean haveNewFile) {
+        Bundle args = new Bundle();
+        args.putBoolean(HAVE_NEW_FILE,haveNewFile);
+        MainFragment fragment = new MainFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getArguments()!=null) {
+            haveNewFile = getArguments().getBoolean(HAVE_NEW_FILE);
+        } else {
+            haveNewFile = false;
+        }
     }
-
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_main,container,false);
+        drawerLayout = v.findViewById(R.id.drawer_layout);
+        navigationView = v.findViewById(R.id.navigation_view);
+        menuButton = v.findViewById(R.id.toolbar_menu);
+        changepassword = v.findViewById(R.id.linear_changepassword);
+        logout = v.findViewById(R.id.linear_logout);
+        shimmerFrameLayout = v.findViewById(R.id.shimmer_layout);
+        shimmerFrameLayout.stopShimmerAnimation();
+        shimmerFrameLayout.setVisibility(View.GONE);
+
+
+        scannerFileSingleton = ScannerFileSingleton.get(getActivity());
+
+        changepassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new ChangePasswordFragment(), "CHANGEPASSWORD_FRAGMENT")
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
+
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
+                builder1.setTitle("Logout");
+                builder1.setMessage("Are you sure you want to log out?");
+                builder1.setCancelable(true);
+
+                builder1.setPositiveButton(
+                        "Ok",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                                SharedPreferences settings = getActivity().getSharedPreferences("PDFScannerPrefs", Context.MODE_PRIVATE);
+                                settings.edit().remove("token").commit();
+                                settings.edit().remove("username").commit();
+                                Intent i  = new Intent(getActivity(), InitialActivity.class);
+                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(i);
+                                getActivity().finish();
+                            }
+                        });
+
+                builder1.setNegativeButton(
+                        "Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                AlertDialog alert11 = builder1.create();
+                alert11.show();
+            }
+        });
+
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
 
         Button galleryButton = v.findViewById(R.id.galleryButton);
         Button cameraButton = v.findViewById(R.id.cameraButton);
         searchView = v.findViewById(R.id.searchView);
-        titleView = v.findViewById(R.id.toolbar_title);
+        titleView = v.findViewById(R.id.user);
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
         searchView.setMaxWidth(Integer.MAX_VALUE);
+        titleView.setText(getActivity().getSharedPreferences("PDFScannerPrefs", Context.MODE_PRIVATE).getString("username",""));
 
         searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
@@ -149,17 +253,51 @@ public class MainFragment extends Fragment implements IOnBackPressed{
     }
 
     private void updateUI(){
-        ScannerFileLab scannerFileLab = ScannerFileLab.get(getActivity());
-        List<ScannerFile> scannerFiles = scannerFileLab.getScannerFiles();
-        if (scannerFiles.size()==0) {
-            filesView.setVisibility(View.GONE);
-            emptyView.setVisibility(View.VISIBLE);
-        } else {
-            filesView.setVisibility(View.VISIBLE);
-            emptyView.setVisibility(View.GONE);
+        if (getActivity()!=null) {
+            if (haveNewFile) {
+                shimmerFrameLayout.startShimmerAnimation();
+                shimmerFrameLayout.setVisibility(View.VISIBLE);
+                PDFScannerAPI.pdfScannerAPI.getFiles(getActivity().getSharedPreferences("PDFScannerPrefs", Context.MODE_PRIVATE).getString("token", "")).enqueue(new Callback<List<ScannerFile>>() {
+                    @Override
+                    public void onResponse(Call<List<ScannerFile>> call, Response<List<ScannerFile>> response) {
+                        if (response.code() < 300 && response.code() > 199) {
+                            List<ScannerFile> scannerFiles = response.body();
+                            shimmerFrameLayout.stopShimmerAnimation();
+                            shimmerFrameLayout.setVisibility(View.GONE);
+                            if (scannerFiles.size() == 0) {
+                                filesView.setVisibility(View.GONE);
+                                emptyView.setVisibility(View.VISIBLE);
+                            } else {
+                                filesView.setVisibility(View.VISIBLE);
+                                emptyView.setVisibility(View.GONE);
+                            }
+                            fileAdapter = new FileAdapter(scannerFiles);
+                            scannerFileSingleton.put(scannerFiles);
+                            filesView.setAdapter(fileAdapter);
+                        } else {
+                            Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<ScannerFile>> call, Throwable t) {
+                        Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else {
+                List<ScannerFile> scannerFiles = scannerFileSingleton.getScannerFiles();
+                if (scannerFiles.size() == 0) {
+                    filesView.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                } else {
+                    filesView.setVisibility(View.VISIBLE);
+                    emptyView.setVisibility(View.GONE);
+                }
+                fileAdapter = new FileAdapter(scannerFiles);
+                scannerFileSingleton.put(scannerFiles);
+                filesView.setAdapter(fileAdapter);
+            }
         }
-        fileAdapter = new FileAdapter(scannerFiles);
-        filesView.setAdapter(fileAdapter);
     }
 
     @Override
@@ -193,6 +331,9 @@ public class MainFragment extends Fragment implements IOnBackPressed{
         if (!searchView.isIconified()) {
             searchView.setIconified(true);
             return true;
+        } else if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
         }
         return false;
     }
@@ -200,14 +341,15 @@ public class MainFragment extends Fragment implements IOnBackPressed{
     @Override
     public void onResume() {
         super.onResume();
+        MainActivity.isMainFragment=true;
         if (searchView.isIconified()) {
             titleView.setVisibility(View.VISIBLE);
-
         } else {
             titleView.setVisibility(View.GONE);
 
         }
     }
+
 
     private class FileHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private TextView titleText, dateText;
@@ -225,9 +367,9 @@ public class MainFragment extends Fragment implements IOnBackPressed{
 
         public void bind(ScannerFile s) {
             scannerFile = s;
-            titleText.setText(scannerFile.getTitle());
-            dateText.setText(scannerFile.getDate().toString());
-            if (scannerFile.getType().equals("pdf")) {
+            titleText.setText(scannerFile.getFile_name());
+            dateText.setText(scannerFile.getDate_created().toString());
+            if (scannerFile.getFile_type().equals("pdf")) {
                 iconImage.setImageResource(R.mipmap.ic_pdf_foreground);
             } else {
                 iconImage.setImageResource(R.mipmap.ic_image_foreground);
@@ -281,7 +423,14 @@ public class MainFragment extends Fragment implements IOnBackPressed{
                     if (search.isEmpty()) {
                         mScannerFiles = scannerFiles;
                     } else {
-                        mScannerFiles = ScannerFileLab.get(getActivity()).searchScannerFiles(search);
+                        mScannerFiles = scannerFiles;
+                        List<ScannerFile> temp = new ArrayList<>();
+                        for (ScannerFile s : scannerFiles) {
+                            if (s.getFile_name().toLowerCase().contains(search.toLowerCase())) {
+                                temp.add(s);
+                            }
+                        }
+                        mScannerFiles = temp;
                     }
                     FilterResults filterResults = new FilterResults();
                     filterResults.values = mScannerFiles;
@@ -296,6 +445,8 @@ public class MainFragment extends Fragment implements IOnBackPressed{
             };
         }
     }
+
+
 
     public File getPhotoFile() {
         File filesDir = getActivity().getFilesDir();
