@@ -57,6 +57,8 @@ public class ChangePasswordFragment extends Fragment implements IOnBackPressed{
         progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         progressDialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
         progressDialog.setCancelable(false);
+        MainFragment.haveNewFile=false;
+
 
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
